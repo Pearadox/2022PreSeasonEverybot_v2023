@@ -83,14 +83,15 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    new JoystickButton(_controller, JoystickConstants.BUMPER_RIGHT).whileHeld(new IntakeIn(_intake));
-    new JoystickButton(_controller, JoystickConstants.BUMPER_LEFT).whileHeld(new IntakeOut(_intake));
-    new JoystickButton(_controller, JoystickConstants.Y).whileHeld(new RunCommand(_intake::raise, _intake));
-    new JoystickButton(_controller, JoystickConstants.A).whileHeld(new RunCommand(_intake::lower, _intake));
-    new JoystickButton(_controller, JoystickConstants.B).whileHeld(new Stabilize(_driveTrain, _gyro));
-    new JoystickButton(_controller, JoystickConstants.X).whenPressed(new InstantCommand(_gyro::reset));
-    new JoystickButton(_controller, JoystickConstants.LOGO_RIGHT).whenPressed(new EngageCS(_driveTrain, _gyro));
-    new JoystickButton(_controller, JoystickConstants.LOGO_LEFT).whenPressed(new AutoGetSphubeAndScore(_intake));
+    new JoystickButton(_controller, JoystickConstants.BUMPER_RIGHT).whileTrue(new IntakeIn(_intake));
+    new JoystickButton(_controller, JoystickConstants.BUMPER_LEFT).whileTrue(new IntakeOut(_intake));
+    new JoystickButton(_controller, JoystickConstants.Y).whileTrue(new RunCommand(_intake::raise, _intake));
+    new JoystickButton(_controller, JoystickConstants.A).whileTrue(new RunCommand(_intake::lower, _intake));
+    new JoystickButton(_controller, JoystickConstants.B).whileTrue(new Stabilize(_driveTrain, _gyro));
+    new JoystickButton(_controller, JoystickConstants.X).onTrue(
+      new InstantCommand(_gyro::reset).andThen(new InstantCommand(_driveTrain::resetEncoders)));
+    new JoystickButton(_controller, JoystickConstants.LOGO_RIGHT).onTrue(new EngageCS(_driveTrain, _gyro));
+    new JoystickButton(_controller, JoystickConstants.LOGO_LEFT).onTrue(new AutoGetSphubeAndScore(_intake));
   }
 
   /**
@@ -148,8 +149,8 @@ public class RobotContainer {
     // Create config for trajectory
     TrajectoryConfig config =
         new TrajectoryConfig(
-                2,
-                1)
+                0.2,
+                0.1)
             // Add kinematics to ensure max speed is actually obeyed
             .setKinematics(DriveTrainConstants.kDriveKinematics)
             // Apply the voltage constraint
@@ -181,7 +182,6 @@ public class RobotContainer {
         _driveTrain::getWheelSpeeds,
         new PIDController(DriveTrainConstants.kPDriveVel, 0, 0),
         new PIDController(DriveTrainConstants.kPDriveVel, 0, 0),
-        // RamseteCommand passes volts to the callback
         _driveTrain::tankDriveVolts,
         _driveTrain);
     _driveTrain.resetOdometry(exampleTrajectory.getInitialPose());
